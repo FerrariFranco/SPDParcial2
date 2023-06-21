@@ -1,0 +1,170 @@
+#define BOTON_UNO 3
+#define BOTON_DOS 4
+#define BOTON_TRES 2
+#define LED_ROJO 13
+#define LED_VERDE 12
+#define G 5
+#define F 6
+#define B 7
+#define A 8
+#define E 15
+#define D 16
+#define C 17
+
+int contador = 0;
+bool incrementando = false;
+bool decrementando = false;
+bool reanudarPrograma = false;
+bool pausado = true;
+
+void setup() {
+  pinMode(LED_VERDE, OUTPUT);
+  pinMode(LED_ROJO, OUTPUT);
+  pinMode(BOTON_UNO, INPUT_PULLUP);
+  pinMode(BOTON_DOS, INPUT_PULLUP);
+  pinMode(BOTON_TRES, INPUT_PULLUP);
+  pinMode(A, OUTPUT);
+  pinMode(B, OUTPUT);
+  pinMode(C, OUTPUT);
+  pinMode(D, OUTPUT);
+  pinMode(E, OUTPUT);
+  pinMode(F, OUTPUT);
+  pinMode(G, OUTPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  if (botonPresionado(BOTON_TRES)) {
+    if (pausado) {
+      pausado = false;
+      encender(LED_ROJO, 0);
+      apagar(LED_VERDE, 0);
+      incrementando = false;
+      decrementando = false;
+    } else {
+      pausado = true;
+      encender(LED_VERDE, 0);
+      apagar(LED_ROJO, 0);
+      
+    }
+  }
+  if ((botonPresionado(BOTON_UNO) || botonPresionado(BOTON_DOS)) && pausado) {
+    reanudarPrograma = true;
+  }
+
+  if (!pausado || reanudarPrograma) {
+    if (botonPresionado(BOTON_UNO)) {
+      incrementando = true;
+      decrementando = false;
+      encender(LED_VERDE, 0);
+      apagar(LED_ROJO, 0);
+      reanudarPrograma = false;
+    } else if (botonPresionado(BOTON_DOS)) {
+      incrementando = false;
+      decrementando = true;
+      encender(LED_VERDE, 0);
+      apagar(LED_ROJO, 0);
+      reanudarPrograma = false;
+    }
+
+    if (incrementando && !decrementando) {
+      incrementarContador();
+    } else if (!incrementando && decrementando) {
+      decrementarContador();
+    }
+  }
+
+  mostrarContador(contador, 3000);
+}
+void incrementarContador() {
+  static unsigned long tiempoAnterior = 0;
+  
+  if (millis() - tiempoAnterior >= 3000) {
+    if (contador < 7) {
+      Serial.println("Subiendo");
+      contador++;
+    }
+    
+    tiempoAnterior = millis();
+  }
+}
+
+void decrementarContador() {
+  static unsigned long tiempoAnterior = 0;
+  
+  if (millis() - tiempoAnterior >= 3000) {
+    if (contador > 0) {
+      Serial.println("Bajando");
+      contador--;
+    }
+    
+    tiempoAnterior = millis();
+  }
+}
+
+bool botonPresionado(int boton) {
+  return digitalRead(boton) == HIGH;
+}
+
+void encender(int ledEncender, int demoraEncendido) {
+  digitalWrite(ledEncender, HIGH);
+  delay(demoraEncendido);
+}
+
+void apagar(int ledApagar, int demoraApagado) {
+  digitalWrite(ledApagar, LOW);
+  delay(demoraApagado);
+}
+
+void numerarSieteSegmentos(int a, int b, int c, int d, int e, int f, int g) {
+  digitalWrite(A, a);
+  digitalWrite(B, b);
+  digitalWrite(C, c);
+  digitalWrite(D, d);
+  digitalWrite(E, e);
+  digitalWrite(F, f);
+  digitalWrite(G, g);
+}
+
+void mostrarContador(int contador, int tiempo) {
+  static unsigned long tiempoAnterior = 0;
+
+  if (millis() - tiempoAnterior >= tiempo) {
+    switch (contador) {
+      case 0:
+        numerarSieteSegmentos(1, 1, 1, 1, 1, 1, 0);
+        Serial.println("El montacarga se encuentra en planta baja");
+        break;
+      case 1:
+        numerarSieteSegmentos(0, 1, 0, 0, 1, 0, 0);
+        Serial.println("El montacarga se encuentra en piso 1");
+        break;
+      case 2:
+        numerarSieteSegmentos(1, 1, 1, 1, 0, 0, 1);
+        Serial.println("El montacarga se encuentra en piso 2");
+        break;
+      case 3:
+        numerarSieteSegmentos(1, 1, 0, 1, 1, 0, 1);
+        Serial.println("El montacarga se encuentra en piso 3");
+        break;
+      case 4:
+        numerarSieteSegmentos(0, 1, 0, 0, 1, 1, 1);
+        Serial.println("El montacarga se encuentra en piso 4");
+        break;
+      case 5:
+        numerarSieteSegmentos(1, 0, 0, 1, 1, 1, 1);
+        Serial.println("El montacarga se encuentra en piso 5");
+        break;
+      case 6:
+        numerarSieteSegmentos(1, 0, 1, 1, 1, 1, 1);
+        Serial.println("El montacarga se encuentra en piso 6");
+        break;
+      case 7:
+        numerarSieteSegmentos(1, 1, 0, 0, 1, 0, 0);
+        Serial.println("El montacarga se encuentra en piso 7");
+        break;
+    }
+
+    tiempoAnterior = millis();
+  }
+}
