@@ -1,5 +1,5 @@
 # Parcial_SPD_Ferrari_Franco
-![Hospital](./img/hospital-posadas.jpg)
+![Hospital](./img/incendio.jpg)
 
 
 ## Creador
@@ -7,75 +7,97 @@
 
 
 
-## Proyecto: Elevador Hospital Posadas.
+## Proyecto: Sistema de incendios.
 ![Tinkercad](./img/SPD_PARCIAL.JPG)
 
 
 ## Descripción
-El programa muestra el movimiento del elevador del hospital Posadas recorriendo sus siete pisos.
+El Programa ejecuta la logica que sigue un sistema alertante de incendios.
 
-Los dispositivos utilizados fueron: 1 led verde (muestra cuando el elevador esta en movimiento), 1 led rojo (muestra cuando el elevador se encuentra detenido), 1 led de siete segmentos (muestra el piso en el que se encuentra), 3 botones pull-down (uno sube el elevador, otro lo baja y el otro lo detiene).
+Los dispositivos utilizados fueron: 2 Leds (uno rojo y uno azul), 1 contron remoto IR (para apagar o prender el programa y setearlo), 1 sensor IR (para leer las señales del control), 1 sensor de temperatura, 1 LCD 16x2 (para mostrar las salidas de los distintos eventos que ocurren), 1 potenciometro (para encender el lcd), 1 servonmotor (para activar la respuesta al incendio), 1 porotoboard (para realizar las conexiones) y 1 Placa Arduino UNO
 
-Al comienzo del programa se definen constantes para referir los leds y los botones a los pines en los que se encuentran conectados, luego se declaran una serie de variables las cuales son un contador el cual asigna los pisos y varios booleans que van comprobando el movimiento del elevador.
+Al comienzo del programa se definen constantes para referir los leds y los distintos dispositivos que se encuentran conectados, luego se declaran una serie de banderas para prender o apagar el programa.
 
-Luego hay varias funciones que se ejecutan dentro del loop y que tienen como parametro el contador y van siendo validadas con los booleans, generalmente cuando se presiona un botón. 
+## Funciones
 
-La funcion incrementarContador() lo que hace es que comienza llamando a la funcion millis() para contar el tiempo en la ejecucion de la funcion y cada 3000 ms aumenta el contador.
-La funcion decrementarContador() lo que hace es que comienza llamando a la funcion millis() para contar el tiempo en la ejecucion de la funcion y cada 3000 ms reduce el contador.
-La funcion botonPresionado() evalua si el boton fue presionado y devuelve true si es que asi fue.
-la función encender() recibe como parametro un led y lo prende.
-la función apagar() recibe como parametro un led y lo apaga.
-La función numerarSieteSegmentos() toma como parametro un contador y lo pone en un switch en el cual en cada case (hasta el 7) muestra el numero en el siete segmentos.
+A continuación se describen las funciones principales utilizadas en el proyecto:
 
-## Función principal
-La siguiente funcion se encarga de mostrar por el siete segmentos el valor que va teniendo el contador.
-~~~ C++ (lenguaje en el que esta escrito)
-void mostrarContador(int contador, int tiempo) {
-  static unsigned long tiempoAnterior = 0;
+### `obtener_temperatura()`
 
-  if (millis() - tiempoAnterior >= tiempo) {
-    switch (contador) {
-      case 0:
-        numerarSieteSegmentos(1, 1, 1, 1, 1, 1, 0);
-        Serial.println("El montacarga se encuentra en planta baja");
-        break;
-      case 1:
-        numerarSieteSegmentos(0, 1, 0, 0, 1, 0, 0);
-        Serial.println("El montacarga se encuentra en piso 1");
-        break;
-      case 2:
-        numerarSieteSegmentos(1, 1, 1, 1, 0, 0, 1);
-        Serial.println("El montacarga se encuentra en piso 2");
-        break;
-      case 3:
-        numerarSieteSegmentos(1, 1, 0, 1, 1, 0, 1);
-        Serial.println("El montacarga se encuentra en piso 3");
-        break;
-      case 4:
-        numerarSieteSegmentos(0, 1, 0, 0, 1, 1, 1);
-        Serial.println("El montacarga se encuentra en piso 4");
-        break;
-      case 5:
-        numerarSieteSegmentos(1, 0, 0, 1, 1, 1, 1);
-        Serial.println("El montacarga se encuentra en piso 5");
-        break;
-      case 6:
-        numerarSieteSegmentos(1, 0, 1, 1, 1, 1, 1);
-        Serial.println("El montacarga se encuentra en piso 6");
-        break;
-      case 7:
-        numerarSieteSegmentos(1, 1, 0, 0, 1, 0, 0);
-        Serial.println("El montacarga se encuentra en piso 7");
-        break;
+Esta función lee el valor del sensor de temperatura y realiza el cálculo necesario para obtener la temperatura en grados Celsius. Devuelve el valor de la temperatura como un número de punto flotante.
+
+### `mostrar_grados(int temp)`
+
+Esta función muestra la temperatura en grados en la pantalla LCD. Recibe como parámetro el valor de la temperatura a mostrar.
+
+### `incendio_led()`
+
+Esta función muestra un mensaje de "CUIDADO INCENDIO" en la pantalla LCD y enciende los LEDs para indicar una situación de incendio.
+
+### `obtener_estacion()`
+
+Esta función utiliza un control remoto infrarrojo para obtener la estación seleccionada por el usuario. Devuelve un número entero que representa la estación seleccionada.
+
+### `encender_leds(int estacion)`
+
+Esta función enciende los LEDs correspondientes a la estación seleccionada. Recibe como parámetro el número de estación y realiza el control de los pines de los LEDs para encenderlos según corresponda.
+
+### `alarma(int maximo, int temp)`
+
+Esta función compara la temperatura actual con un umbral máximo y, si se supera, activa una alarma. Muestra un mensaje en la pantalla LCD y mueve el servo motor a una posición específica para simular la alerta.
+
+
+### Función principal: `loop()`
+
+El programa principal utiliza un bucle `loop()` para controlar y monitorear la temperatura y la estación seleccionada. Se activa el programa al seleccionar la estación 5 y se desactiva al seleccionar la estación 6. Las acciones correspondientes se ejecutan mediante funciones auxiliares.
+
+void loop() {
+  int temp = obtener_temperatura();
+  int estacion = obtener_estacion();
+  int maximo;
+
+  if (estacion == 5 && !prendido) {
+    prendido = true;
+    digitalWrite(LED_ROJA, HIGH);
+    digitalWrite(LED_AZUL, LOW);
+    LCD.setCursor(0, 0);
+    LCD.print("Encendido");
+    delay(1000);
+  } 
+  while (prendido) {
+    
+     temp = obtener_temperatura();
+    if (estacion == 1 || estacion == 2) {
+      maximo = 70;
+    } else {
+      maximo = 50;
     }
 
-    tiempoAnterior = millis();
+    encender_leds(estacion);
+    delay(10);
+
+    alarma(maximo, temp);
+    delay(10);
+
+    estacion = obtener_estacion();
+    
+    if ((estacion == 6 && prendido) || estacion == 6) {
+    prendido = false;
+    digitalWrite(LED_ROJA, LOW);
+    digitalWrite(LED_AZUL, LOW);
+    myservo.write(0);
+    LCD.clear();
+    LCD.setCursor(0, 0);
+    LCD.print("Apagado");
+    delay(1000);
+  }
+
   }
 }
-~~~
+
 
 ## :robot: Link al proyecto
-- [proyecto](https://www.tinkercad.com/things/9xRN0OA5sDF-franco-ferrari-pp-spd/editel?sharecode=da4tHVUiULhT1VRnoPa1pwEiQDMaEhGdfFqHiDSKUdw)
+- [proyecto](https://www.tinkercad.com/things/7bZRIHKIjyQ-ferrari-franco-spd-parcial-2/editel?sharecode=qG9P9mMPrzOJbCUg4Gs9_MTDmEoVkj-YqJYjIHvC-Xw)
 ---
 ### Fuentes
 
